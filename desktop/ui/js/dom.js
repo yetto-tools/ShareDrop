@@ -45,8 +45,12 @@ export function svgChild(tag, attrs) {
 export const ICONS = Object.freeze({
   phone: ["M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z", "M11 19h2"],
   laptop: ["M4 5h16v11H4z", "M2 19h20"],
-  down: ["M12 4v12", "M7 11l5 5 5-5"],
-  up: ["M12 20V8", "M7 13l5-5 5 5"],
+  // Flecha sobre una bandeja: descargar (recibir) y subir (enviar).
+  down: ["M12 3.5v11", "M7.5 10.5L12 15l4.5-4.5", "M4.5 16.5v2a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2"],
+  up: ["M12 15.5v-11", "M7.5 8.5L12 4l4.5 4.5", "M4.5 16.5v2a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2"],
+  // Solo la flecha, para las etiquetas pequeñas.
+  arrowDown: ["M12 4.5v14", "M6.5 13l5.5 5.5 5.5-5.5"],
+  arrowUp: ["M12 19.5v-14", "M6.5 11L12 5.5 17.5 11"],
 });
 
 /**

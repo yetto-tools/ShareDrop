@@ -21,17 +21,9 @@
               <span>Historial</span>
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.2 2" /></svg>
             </button>
-            <button type="button" role="menuitem" data-go="connection">
-              <span>Conexión</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9a13 13 0 0 1 18 0" /><path d="M6 12.5a8.5 8.5 0 0 1 12 0" /><path d="M9 16a4 4 0 0 1 6 0" /><circle cx="12" cy="19" r="1" /></svg>
-            </button>
-            <button type="button" role="menuitem" data-go="folder">
-              <span>Archivos recibidos</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5h6l2 2.5h10v9H3z" /></svg>
-            </button>
-            <button type="button" role="menuitem" data-go="general">
-              <span>General</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8 12.5l3 3 5-6" /></svg>
+            <button type="button" role="menuitem" data-go="settings">
+              <span>Ajustes</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>
             </button>
           </div>
         </div>
@@ -67,8 +59,8 @@
         <h2 id="h-transfers">Transferencias</h2>
         <div class="segmented" id="transfer-filter" role="radiogroup" aria-label="Filtrar transferencias">
           <button type="button" role="radio" aria-checked="true" data-filter="all">Todo</button>
-          <button type="button" role="radio" aria-checked="false" data-filter="in">↓ Recibidos</button>
-          <button type="button" role="radio" aria-checked="false" data-filter="out">↑ Enviados</button>
+          <button type="button" role="radio" aria-checked="false" data-filter="in">Recibidos</button>
+          <button type="button" role="radio" aria-checked="false" data-filter="out">Enviados</button>
         </div>
         <ul id="transfers" class="group" role="list"></ul>
       </section>
@@ -86,11 +78,34 @@
       </header>
       <div class="segmented" id="history-filter" role="radiogroup" aria-label="Filtrar historial">
         <button type="button" role="radio" aria-checked="true" data-filter="all">Todo</button>
-        <button type="button" role="radio" aria-checked="false" data-filter="in">↓ Recibidos</button>
-        <button type="button" role="radio" aria-checked="false" data-filter="out">↑ Enviados</button>
+        <button type="button" role="radio" aria-checked="false" data-filter="in">Recibidos</button>
+        <button type="button" role="radio" aria-checked="false" data-filter="out">Enviados</button>
       </div>
       <ul id="history-list" class="group" role="list"></ul>
       <p id="history-empty" class="footnote" hidden></p>
+    </section>
+
+    <!-- ===== Ajustes: la puerta a las páginas de configuración ===== -->
+    <section id="screen-settings" class="screen" aria-label="Ajustes" hidden>
+      <nav class="navbar">
+        <button type="button" class="glass back" data-back aria-label="Atrás"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4.5 7.5 12 15 19.5" /></svg></button>
+        <span></span>
+      </nav>
+      <header><h1>Ajustes</h1></header>
+      <ul class="group" role="list">
+        <li class="row tappable" data-open="connection" tabindex="0" role="button">
+          <div class="body"><div class="title">Conexión</div></div>
+          <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>
+        </li>
+        <li class="row tappable" data-open="folder" tabindex="0" role="button">
+          <div class="body"><div class="title">Archivos recibidos</div></div>
+          <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>
+        </li>
+        <li class="row tappable" data-open="general" tabindex="0" role="button">
+          <div class="body"><div class="title">General</div><div class="sub">Apariencia e inicio con el sistema</div></div>
+          <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>
+        </li>
+      </ul>
     </section>
 
     <!-- ===== Conexión ===== -->

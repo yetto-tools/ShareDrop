@@ -1,7 +1,15 @@
 // Navegación entre pantallas, igual que en la app de Android: Inicio → páginas con "‹" para volver.
 // No usa la URL ni el historial del navegador: son solo cuatro pantallas y una app de escritorio.
 
-/** @typedef {"home" | "history" | "connection" | "folder" | "general"} ScreenName */
+/** @typedef {"home" | "history" | "settings" | "connection" | "folder" | "general"} ScreenName */
+
+/** Pantalla a la que lleva "‹". Ajustes agrupa las páginas de configuración, como en iOS. */
+const PARENT = /** @type {Record<ScreenName, ScreenName>} */ ({
+  home: "home", history: "home", settings: "home", connection: "settings", folder: "settings", general: "settings",
+});
+const DEPTH = /** @type {Record<ScreenName, number>} */ ({
+  home: 0, history: 1, settings: 1, connection: 2, folder: 2, general: 2,
+});
 
 const SLIDE_MS = 250;
 const EASE = "cubic-bezier(.25, 1, .5, 1)";
@@ -36,7 +44,7 @@ export function createRouter({ screens, blocked = () => false, onChange = () => 
     const outgoing = screens[from];
     if (typeof incoming.animate !== "function" || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     // Al ir a una página entra desde su lado; al volver a Inicio sale hacia el lado por el que vino.
-    const forward = to !== "home";
+    const forward = DEPTH[to] > DEPTH[from];
     const d = sideOf(forward ? to : from) * (forward ? 1 : -1);
     const opts = { duration: SLIDE_MS, easing: EASE, fill: /** @type {FillMode} */ ("both") };
     incoming.animate(
@@ -58,7 +66,7 @@ export function createRouter({ screens, blocked = () => false, onChange = () => 
     }).catch(() => {});
   }
 
-  const back = () => go("home");
+  const back = () => go(PARENT[current]);
 
   // Escape vuelve a Inicio (como el gesto de atrás), salvo que haya un diálogo o menú abierto.
   document.addEventListener("keydown", (e) => {

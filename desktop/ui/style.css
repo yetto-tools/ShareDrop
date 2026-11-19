@@ -183,7 +183,7 @@ button.switch[aria-checked="true"]:active i { transform: translateX(16px) scaleX
 .ring.done .prog { stroke-dashoffset: 0; }
 .ring.fail { --dir: var(--red); }
 .ring.fail .prog { stroke-dashoffset: 0; }
-.ring .dir { width: 18px; height: 18px; fill: none; stroke: var(--dir); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; position: static; transform: none; }
+.ring .dir { width: 20px; height: 20px; fill: none; stroke: var(--dir); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; position: static; transform: none; }
 
 /* Etiqueta de dirección: "↓ Recibido" / "↑ Enviado" */
 .chip {
@@ -191,6 +191,7 @@ button.switch[aria-checked="true"]:active i { transform: translateX(16px) scaleX
   font-size: 11px; font-weight: 600; line-height: 18px; letter-spacing: .01em;
   color: var(--blue); background: var(--blue-tint);
 }
+.chip .arrow { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; margin-right: 3px; vertical-align: -1px; }
 .chip.in { color: var(--recv-text); background: color-mix(in srgb, var(--recv) 18%, transparent); }
 .chip.fail { color: var(--red); background: color-mix(in srgb, var(--red) 14%, transparent); }
 

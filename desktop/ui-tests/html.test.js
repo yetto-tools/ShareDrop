@@ -38,13 +38,15 @@ test("index.html: define todos los ids que main.js pide con byId()", () => {
 test("index.html: cada pantalla y cada opción del menú existen", () => {
   const body = html.replace(/<!--[\s\S]*?-->/g, "");
   const screens = [...body.matchAll(/<section id="screen-([a-z]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(screens.sort(), ["connection", "folder", "general", "history", "home"]);
-  for (const m of body.matchAll(/data-go="([a-z]+)"/g)) assert.ok(screens.includes(m[1]), `el menú apunta a una pantalla inexistente: ${m[1]}`);
+  assert.deepEqual(screens.sort(), ["connection", "folder", "general", "history", "home", "settings"]);
+  for (const m of body.matchAll(/data-(?:go|open)="([a-z]+)"/g)) assert.ok(screens.includes(m[1]), `apunta a una pantalla inexistente: ${m[1]}`);
+  const menu = body.match(/<div id="more-menu"[\s\S]*?<\/div>/)?.[0] ?? "";
+  assert.equal((menu.match(/role="menuitem"/g) ?? []).length, 2, "el menú solo lleva Historial y Ajustes");
 });
 
 test("index.html: los botones «atrás» están dentro de una pantalla que no es Inicio", () => {
   const body = html.replace(/<!--[\s\S]*?-->/g, "");
   const home = body.match(/<section id="screen-home"[\s\S]*?<\/section>\s*(?=<section id="screen-)/)?.[0] ?? "";
   assert.ok(!home.includes("data-back"), "Inicio no tiene botón de atrás");
-  assert.equal((body.match(/data-back/g) ?? []).length, 4, "historial, conexión, carpeta y general");
+  assert.equal((body.match(/data-back/g) ?? []).length, 5, "historial, ajustes, conexión, carpeta y general");
 });

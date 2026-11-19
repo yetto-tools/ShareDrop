@@ -55,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.erashon.sharedrop.Engine
@@ -414,7 +415,7 @@ fun TransferSection(engine: Engine) {
     if (transfers.isEmpty()) return
 
     SectionHeader("Transferencias")
-    SegmentedControl(listOf("Todo", "↓ Recibidos", "↑ Enviados"), filter) { filter = it }
+    SegmentedControl(listOf("Todo", "Recibidos", "Enviados"), filter) { filter = it }
     Spacer(Modifier.height(10.dp))
 
     val shown = transfers.filter { filter == 0 || (filter == 1) == it.incoming }.take(30)
@@ -466,17 +467,20 @@ fun TransferRow(t: Transfer, onOpen: ((Transfer) -> Unit)? = null, whenText: Str
                     )
                 else -> CircularProgressIndicator(Modifier.size(40.dp), color = color, strokeWidth = 3.dp)
             }
-            Text(if (t.incoming) "↓" else "↑", color = color, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            DirectionArrow(t.incoming, color, 20.dp, tray = true)
         }
         Column(Modifier.weight(1f)) {
             Text(t.file.ifEmpty { "…" }, fontSize = 16.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // Etiqueta de dirección: lleva el verbo y el estado (Recibiendo → Recibido).
-                Text(
-                    "${if (t.incoming) "↓" else "↑"} ${directionLabel(t)}",
-                    color = chipText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clip(CircleShape).background(color.copy(alpha = 0.16f)).padding(horizontal = 8.dp, vertical = 1.dp),
-                )
+                Row(
+                    Modifier.clip(CircleShape).background(color.copy(alpha = 0.16f)).padding(horizontal = 8.dp, vertical = 1.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
+                    DirectionArrow(t.incoming, chipText, 11.dp, tray = false)
+                    Text(directionLabel(t), color = chipText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                }
                 Text(
                     statusText(t), fontSize = 13.sp,
                     color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -490,6 +494,36 @@ fun TransferRow(t: Transfer, onOpen: ((Transfer) -> Unit)? = null, whenText: Str
             }
         }
         if (openable) Text("›", fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Flecha de descarga (recibido) o de subida (enviado), dibujada con trazo redondeado; con bandeja en los tamaños grandes. */
+@Composable
+internal fun DirectionArrow(incoming: Boolean, color: Color, size: Dp, tray: Boolean) {
+    Canvas(Modifier.size(size)) {
+        val w = size.toPx()
+        val sw = (if (tray) 2.2.dp else 1.9.dp).toPx()
+        val top = if (tray) 0.15f else 0.18f
+        val bottom = if (tray) 0.62f else 0.82f
+        // Eje y punta: la punta apunta abajo al recibir y arriba al enviar.
+        val (from, to) = if (incoming) top to bottom else bottom to top
+        val dir = if (incoming) -1f else 1f
+        drawLine(color, Offset(w * 0.5f, w * from), Offset(w * 0.5f, w * to), sw, StrokeCap.Round)
+        val head = Path().apply {
+            moveTo(w * 0.28f, w * (to + dir * 0.20f))
+            lineTo(w * 0.5f, w * to)
+            lineTo(w * 0.72f, w * (to + dir * 0.20f))
+        }
+        drawPath(head, color, style = Stroke(width = sw, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        if (tray) {
+            val base = Path().apply {
+                moveTo(w * 0.16f, w * 0.72f)
+                lineTo(w * 0.16f, w * 0.82f)
+                lineTo(w * 0.84f, w * 0.82f)
+                lineTo(w * 0.84f, w * 0.72f)
+            }
+            drawPath(base, color, style = Stroke(width = sw, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        }
     }
 }
 

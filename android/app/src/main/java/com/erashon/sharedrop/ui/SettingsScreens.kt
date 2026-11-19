@@ -55,11 +55,23 @@ enum class Screen(val title: String) {
     History("Historial"),
     Connection("Conexión"),
     Folder("Archivos recibidos"),
+    Settings("Ajustes"),
     Permissions("Permisos"),
     Appearance("Apariencia");
 
-    /** Pantalla a la que lleva "‹". Inicio no tiene. */
-    val parent: Screen? get() = if (this == Home) null else Home
+    /** Pantalla a la que lleva "‹". Inicio no tiene. Ajustes agrupa las páginas de configuración, como en iOS. */
+    val parent: Screen? get() = when (this) {
+        Home -> null
+        History, Settings -> Home
+        else -> Settings
+    }
+
+    /** Nivel de navegación: define si un cambio entra (más profundo) o vuelve. */
+    val depth: Int get() = when (this) {
+        Home -> 0
+        History, Settings -> 1
+        else -> 2
+    }
 }
 
 // ---------- Cristal: solo en los controles flotantes de la barra superior ----------
@@ -118,15 +130,12 @@ fun MoreMenu(onNavigate: (Screen) -> Unit) {
             border = androidx.compose.foundation.BorderStroke(0.8.dp, scheme.onSurface.copy(alpha = 0.12f)),
         ) {
             MenuRow("Historial", MenuIcon.Clock) { open = false; onNavigate(Screen.History) }
-            MenuRow("Conexión", MenuIcon.Wifi) { open = false; onNavigate(Screen.Connection) }
-            MenuRow("Archivos recibidos", MenuIcon.Folder) { open = false; onNavigate(Screen.Folder) }
-            MenuRow("Permisos", MenuIcon.Check) { open = false; onNavigate(Screen.Permissions) }
-            MenuRow("Apariencia", MenuIcon.Theme) { open = false; onNavigate(Screen.Appearance) }
+            MenuRow("Ajustes", MenuIcon.Sliders) { open = false; onNavigate(Screen.Settings) }
         }
     }
 }
 
-private enum class MenuIcon { Clock, Wifi, Folder, Check, Theme }
+private enum class MenuIcon { Clock, Sliders }
 
 @Composable
 private fun MenuRow(label: String, icon: MenuIcon, onClick: () -> Unit) {
@@ -178,41 +187,12 @@ private fun Symbol(icon: MenuIcon) {
                 drawLine(tint, Offset(w / 2, h * 0.28f), Offset(w / 2, h / 2), 1.7.dp.toPx(), StrokeCap.Round)
                 drawLine(tint, Offset(w / 2, h / 2), Offset(w * 0.66f, h * 0.6f), 1.7.dp.toPx(), StrokeCap.Round)
             }
-            MenuIcon.Wifi -> {
-                // Tres arcos concéntricos y un punto, como el símbolo "wifi".
-                val cx = w / 2
-                val base = h * 0.82f
-                for (i in 1..3) {
-                    val r = w * (0.16f * i + 0.04f)
-                    drawArc(tint, 225f, 90f, false, Offset(cx - r, base - r), Size(r * 2, r * 2), style = s)
-                }
-                drawCircle(tint, 1.6.dp.toPx(), Offset(cx, base))
-            }
-            MenuIcon.Folder -> {
-                val body = Path().apply {
-                    moveTo(w * 0.08f, h * 0.30f)
-                    lineTo(w * 0.38f, h * 0.30f)
-                    lineTo(w * 0.48f, h * 0.42f)
-                    lineTo(w * 0.92f, h * 0.42f)
-                    lineTo(w * 0.92f, h * 0.82f)
-                    lineTo(w * 0.08f, h * 0.82f)
-                    close()
-                }
-                drawPath(body, tint, style = s)
-            }
-            MenuIcon.Theme -> {
-                // Círculo con la mitad rellena: claro/oscuro.
-                drawCircle(tint, w * 0.42f, Offset(w / 2, h / 2), style = s)
-                drawArc(tint, 90f, 180f, true, Offset(w * 0.08f, h * 0.08f), Size(w * 0.84f, h * 0.84f))
-            }
-            MenuIcon.Check -> {
-                drawCircle(tint, w * 0.42f, Offset(w / 2, h / 2), style = s)
-                val tick = Path().apply {
-                    moveTo(w * 0.31f, h * 0.52f)
-                    lineTo(w * 0.45f, h * 0.65f)
-                    lineTo(w * 0.70f, h * 0.36f)
-                }
-                drawPath(tick, tint, style = s)
+            MenuIcon.Sliders -> {
+                // Dos controles deslizantes, como el símbolo de ajustes.
+                drawLine(tint, Offset(w * 0.10f, h * 0.32f), Offset(w * 0.90f, h * 0.32f), 1.7.dp.toPx(), StrokeCap.Round)
+                drawLine(tint, Offset(w * 0.10f, h * 0.68f), Offset(w * 0.90f, h * 0.68f), 1.7.dp.toPx(), StrokeCap.Round)
+                drawCircle(tint, w * 0.11f, Offset(w * 0.66f, h * 0.32f), style = s)
+                drawCircle(tint, w * 0.11f, Offset(w * 0.34f, h * 0.68f), style = s)
             }
         }
     }
@@ -277,6 +257,25 @@ fun ConnectionPage(
 fun FolderPage(engine: Engine, onBack: () -> Unit, onChoose: () -> Unit) {
     PageHeader(Screen.Folder, onBack = onBack)
     FolderSection(engine, onChoose, header = false)
+}
+
+/** Ajustes: lista agrupada que lleva a cada página de configuración, como Ajustes de iOS. */
+@Composable
+fun SettingsPage(onBack: () -> Unit, onNavigate: (Screen) -> Unit) {
+    PageHeader(Screen.Settings, onBack = onBack)
+    Grouped {
+        val rows = listOf(Screen.Connection, Screen.Folder, Screen.Appearance, Screen.Permissions)
+        rows.forEachIndexed { i, target ->
+            if (i > 0) RowDivider(inset = false)
+            Row(
+                Modifier.fillMaxWidth().clickable { onNavigate(target) }.padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(target.title, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                Text("›", fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
 }
 
 @Composable

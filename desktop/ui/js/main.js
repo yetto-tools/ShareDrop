@@ -38,6 +38,7 @@ async function main() {
     screens: {
       home: byId("screen-home"),
       history: byId("screen-history"),
+      settings: byId("screen-settings"),
       connection: byId("screen-connection"),
       folder: byId("screen-folder"),
       general: byId("screen-general"),
@@ -49,6 +50,17 @@ async function main() {
   });
   createMoreMenu({ button: byId("more-button"), menu: moreMenuNode, onSelect: router.go });
   for (const back of document.querySelectorAll("[data-back]")) back.addEventListener("click", router.back);
+  // Filas de Ajustes: abren su página (clic, Enter o espacio).
+  for (const row of document.querySelectorAll("[data-open]")) {
+    const open = () => router.go(/** @type {any} */ (row.getAttribute("data-open")));
+    row.addEventListener("click", open);
+    row.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        open();
+      }
+    });
+  }
 
   // --- Historial: de izquierda a derecha lo abre, de derecha a izquierda vuelve ---
   const history = createHistoryPage({

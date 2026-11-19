@@ -46,7 +46,7 @@ fun HistoryPage(engine: Engine, onBack: () -> Unit) {
     val now = System.currentTimeMillis()
 
     PageHeader(Screen.History, "Las últimas ${HistoryLogic.KEEP} de cada tipo", onBack = onBack)
-    SegmentedControl(listOf("Todo", "↓ Recibidos", "↑ Enviados"), tab) { tab = it }
+    SegmentedControl(listOf("Todo", "Recibidos", "Enviados"), tab) { tab = it }
     Spacer(Modifier.height(10.dp))
 
     if (shown.isEmpty()) {

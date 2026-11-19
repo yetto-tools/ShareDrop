@@ -43,7 +43,7 @@ export function paintTransferRow(li, t, suffix = "") {
   li.dataset.dir = dir.key;
   title.textContent = t.file || "…";
   chip.className = `chip ${dir.key}${t.state === "failed" ? " fail" : ""}`;
-  chip.textContent = `${dir.symbol} ${dir.label}`;
+  chip.replaceChildren(svg(t.incoming ? ICONS.arrowDown : ICONS.arrowUp, { cls: "arrow" }), dir.label);
   ring.className = `ring ${dir.key}${t.state === "finished" ? " done" : t.state === "failed" ? " fail" : ""}`;
   ring.querySelector(".dir")?.replaceChildren(...(t.incoming ? ICONS.down : ICONS.up).map((d) => svgChild("path", { d })));
   /** @type {SVGElement} */ (ring.querySelector(".prog")).style.strokeDashoffset = String(RING_LENGTH * (1 - transferProgress(t)));

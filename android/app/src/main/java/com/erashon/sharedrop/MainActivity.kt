@@ -52,6 +52,7 @@ import com.erashon.sharedrop.ui.PairingDialogs
 import com.erashon.sharedrop.ui.PermissionsPage
 import com.erashon.sharedrop.ui.Screen
 import com.erashon.sharedrop.ui.AppearancePage
+import com.erashon.sharedrop.ui.SettingsPage
 import com.erashon.sharedrop.ui.ShareDropTheme
 
 class MainActivity : ComponentActivity() {
@@ -153,7 +154,7 @@ class MainActivity : ComponentActivity() {
                                 onDragCancel = { total = 0f },
                                 onDragEnd = {
                                     if (total > swipePx && screen == Screen.Home) screen = Screen.History
-                                    else if (total < -swipePx && screen != Screen.Home) screen = Screen.Home
+                                    else if (total < -swipePx && screen != Screen.Home) screen = screen.parent ?: Screen.Home
                                 },
                                 onHorizontalDrag = { _, dx -> total += dx },
                             )
@@ -167,7 +168,7 @@ class MainActivity : ComponentActivity() {
                         targetState = screen,
                         transitionSpec = {
                             // El historial entra por la izquierda (como el gesto); las demás páginas, por la derecha.
-                            val forward = targetState != Screen.Home
+                            val forward = targetState.depth > initialState.depth
                             val d = (if ((if (forward) targetState else initialState) == Screen.History) -1 else 1) * (if (forward) 1 else -1)
                             val spec = tween<androidx.compose.ui.unit.IntOffset>(250)
                             (slideInHorizontally(spec) { d * it / 3 } + fadeIn(tween(250)))
@@ -196,6 +197,7 @@ class MainActivity : ComponentActivity() {
                         )
                         Screen.Folder -> FolderPage(engine, onBack = goBack) { folderPicker.launch(null) }
                         Screen.Permissions -> PermissionsPage(allFiles, onBack = goBack) { requestAllFiles() }
+                        Screen.Settings -> SettingsPage(onBack = goBack, onNavigate = { screen = it })
                         Screen.Appearance -> AppearancePage(themeMode, onBack = goBack) { engine.store.setTheme(it) }
                     }
                     }
