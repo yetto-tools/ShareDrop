@@ -246,6 +246,7 @@ fn a_failed_send_can_be_retried_once_and_the_retry_runs_again() {
 
     // Nadie escucha en ese puerto: el envío falla al conectar.
     a.engine.send_to_addr("nadie", "127.0.0.1:1", vec![Outgoing::from_path(&file).unwrap()]);
+    // Falla, se reintenta sola dos veces (esperas de 2 s y 4 s) y recién entonces queda como fallida.
     let failed = outgoing_done(&a.events);
     assert_eq!(failed.state, TransferState::Failed);
 

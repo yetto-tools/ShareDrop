@@ -181,60 +181,81 @@ class Engine(private val ctx: Context) {
         send(device, uris)
     }
 
-    private fun runSend(tid: Long, device: Device, uris: List<Uri>) {
-        val files = uris.map { Storage.describe(ctx, it) }
-        var sentCount = 0
-        var current = Transfer(tid, device.name, files.firstOrNull()?.name ?: "", 0, 0, false, Transfer.State.Active)
-        track(current)
-        try {
-            val sock = Socket()
-            sock.connect(InetSocketAddress(device.address, device.port), 5000)
-            sock.tcpNoDelay = true
-            sock.sendBufferSize = 1 shl 20
-            Channel(sock).use { ch ->
-                Handshake.initiate(ch, store, ui)
-                val offer = JSONObject().put(
-                    "files",
-                    JSONArray().apply { files.forEach { put(JSONObject().put("name", it.name).put("size", it.size)) } },
-                )
-                ch.send(T.OFFER, offer.toString().toByteArray())
-                val reply = ch.recv()
-                if (reply.type != T.ACCEPT) throw IOException(errorMessage(reply.payload) ?: "Rechazado")
+    /** Reintentos automáticos tras un corte de red; pasados estos, queda el botón «Reintentar». */
+    private val autoRetries = 2
 
-                val buf = ByteArray(CHUNK)
-                for ((i, f) in files.withIndex()) {
-                    sentCount = i
-                    current = current.copy(file = f.name, done = 0, total = f.size)
-                    track(current)
-                    ch.send(T.FILE_START, JSONObject().put("name", f.name).put("size", f.size).toString().toByteArray())
-                    var sent = 0L
-                    var lastUi = 0L
-                    ctx.contentResolver.openInputStream(f.uri)!!.use { input ->
-                        while (true) {
-                            val n = input.read(buf)
-                            if (n < 0) break
-                            ch.send(T.DATA, buf, n)
-                            sent += n
-                            val now = System.nanoTime()
-                            if (now - lastUi > 150_000_000L) {
-                                lastUi = now
-                                track(current.copy(done = sent))
+    /** ¿Es un fallo de red que puede resolverse solo? (corte, conexión rechazada, tiempo agotado). */
+    private fun isTransient(e: Exception) =
+        e is java.net.SocketException || e is java.net.SocketTimeoutException || e is java.io.EOFException
+
+    private fun runSend(tid: Long, device: Device, uris: List<Uri>) {
+        var pending = uris
+        var auto = 0
+        var current = Transfer(tid, device.name, "", 0, 0, false, Transfer.State.Active)
+        while (true) {
+            val files = pending.map { Storage.describe(ctx, it) }
+            var sentCount = 0
+            current = current.copy(file = files.firstOrNull()?.name ?: "", done = 0, total = 0, state = Transfer.State.Active, error = null)
+            track(current)
+            try {
+                val sock = Socket()
+                sock.connect(InetSocketAddress(device.address, device.port), 5000)
+                sock.tcpNoDelay = true
+                sock.sendBufferSize = 1 shl 20
+                Channel(sock).use { ch ->
+                    Handshake.initiate(ch, store, ui)
+                    val offer = JSONObject().put(
+                        "files",
+                        JSONArray().apply { files.forEach { put(JSONObject().put("name", it.name).put("size", it.size)) } },
+                    )
+                    ch.send(T.OFFER, offer.toString().toByteArray())
+                    val reply = ch.recv()
+                    if (reply.type != T.ACCEPT) throw IOException(errorMessage(reply.payload) ?: "Rechazado")
+
+                    val buf = ByteArray(CHUNK)
+                    for ((i, f) in files.withIndex()) {
+                        sentCount = i
+                        current = current.copy(file = f.name, done = 0, total = f.size)
+                        track(current)
+                        ch.send(T.FILE_START, JSONObject().put("name", f.name).put("size", f.size).toString().toByteArray())
+                        var sent = 0L
+                        var lastUi = 0L
+                        ctx.contentResolver.openInputStream(f.uri)!!.use { input ->
+                            while (true) {
+                                val n = input.read(buf)
+                                if (n < 0) break
+                                ch.send(T.DATA, buf, n)
+                                sent += n
+                                val now = System.nanoTime()
+                                if (now - lastUi > 150_000_000L) {
+                                    lastUi = now
+                                    track(current.copy(done = sent))
+                                }
                             }
                         }
+                        ch.send(T.FILE_END)
+                        current = current.copy(done = sent, total = sent)
+                        track(current)
                     }
-                    ch.send(T.FILE_END)
-                    current = current.copy(done = sent, total = sent)
-                    track(current)
+                    ch.send(T.DONE)
+                    val ack = ch.recv()
+                    if (ack.type != T.DONE) throw IOException(errorMessage(ack.payload) ?: "Sin confirmación")
                 }
-                ch.send(T.DONE)
-                val ack = ch.recv()
-                if (ack.type != T.DONE) throw IOException(errorMessage(ack.payload) ?: "Sin confirmación")
+                track(current.copy(state = Transfer.State.Finished))
+                return
+            } catch (e: Exception) {
+                // Lo que faltó, desde el archivo que se cortó: para repetirlo solo o con el botón.
+                val rest = pending.drop(sentCount)
+                if (auto < autoRetries && isTransient(e)) {
+                    auto++
+                    pending = rest
+                    Thread.sleep(2000L * auto)
+                    continue
+                }
+                retries[tid] = device to rest
+                track(current.copy(state = Transfer.State.Failed, error = e.message ?: e.javaClass.simpleName))
+                return
             }
-            track(current.copy(state = Transfer.State.Finished))
-        } catch (e: Exception) {
-            // Se anota qué faltó (desde el archivo que se cortó) para poder reintentar.
-            retries[tid] = device to uris.drop(sentCount)
-            track(current.copy(state = Transfer.State.Failed, error = e.message ?: e.javaClass.simpleName))
         }
     }
 

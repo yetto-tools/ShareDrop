@@ -168,6 +168,18 @@ pub struct Engine {
     session: u64,
 }
 
+/// Reintentos automáticos tras un corte de red; pasados estos, queda el botón «Reintentar».
+const AUTO_RETRIES: u32 = 2;
+
+/// ¿Es un fallo de red que puede resolverse solo? (conexión rechazada, corte, tiempo agotado).
+fn is_transient(e: &Error) -> bool {
+    match e {
+        Error::Io(_) => true,
+        Error::Protocol(m) => m.starts_with("No se pudo conectar"),
+        _ => false,
+    }
+}
+
 struct Retry {
     peer: String,
     addr: String,
@@ -369,19 +381,40 @@ impl Engine {
             path: None,
         };
         self.emit_transfer(&cur);
-        // Antes de enviar se anotan las rutas: si falla, se reintenta desde el archivo que se cortó.
-        let names: Vec<String> = files.iter().map(|f| f.name.clone()).collect();
-        let paths: Vec<Option<PathBuf>> = files.iter().map(|f| f.path.clone()).collect();
-        match self.do_send(&mut cur, addr, files) {
-            Ok(()) => cur.state = TransferState::Finished,
-            Err(e) => {
-                cur.state = TransferState::Failed;
-                cur.error = Some(e.to_string());
-                let from = names.iter().position(|n| *n == cur.file).unwrap_or(0);
-                if let Some(rest) = paths[from..].iter().cloned().collect::<Option<Vec<_>>>() {
-                    self.retries.lock().unwrap().insert(cur.id, Retry { peer: peer.into(), addr: addr.into(), paths: rest });
+        let mut files = files;
+        let mut auto = 0;
+        loop {
+            // Antes de enviar se anotan las rutas: si falla, se retoma desde el archivo que se cortó.
+            let names: Vec<String> = files.iter().map(|f| f.name.clone()).collect();
+            let paths: Vec<Option<PathBuf>> = files.iter().map(|f| f.path.clone()).collect();
+            let err = match self.do_send(&mut cur, addr, files) {
+                Ok(()) => {
+                    cur.state = TransferState::Finished;
+                    break;
                 }
+                Err(e) => e,
+            };
+            let from = names.iter().position(|n| *n == cur.file).unwrap_or(0);
+            let rest = paths[from..].iter().cloned().collect::<Option<Vec<_>>>();
+            // Un corte de red se reintenta solo, dos veces y con espera; el resto (rechazo, código mal) no.
+            if let Some(rest) = rest.as_ref().filter(|_| auto < AUTO_RETRIES && is_transient(&err)) {
+                auto += 1;
+                thread::sleep(Duration::from_secs(2 * auto as u64));
+                match rest.iter().map(|p| Outgoing::from_path(p)).collect::<io::Result<Vec<_>>>() {
+                    Ok(next) => {
+                        files = next;
+                        continue;
+                    }
+                    Err(e) => cur.error = Some(e.to_string()),
+                }
+            } else {
+                cur.error = Some(err.to_string());
             }
+            cur.state = TransferState::Failed;
+            if let Some(rest) = rest {
+                self.retries.lock().unwrap().insert(cur.id, Retry { peer: peer.into(), addr: addr.into(), paths: rest });
+            }
+            break;
         }
         self.emit_transfer(&cur);
     }
