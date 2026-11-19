@@ -134,12 +134,11 @@ test("visibleHistory: hasta 20 por pestaña, lo más reciente primero", () => {
   assert.deepEqual(visibleHistory([], "all"), []);
 });
 
-test("whenLabel: hoy, ayer y fechas anteriores", () => {
+test("whenLabel: siempre fecha y hora", () => {
   const at = (y, m, d, h, min) => new Date(y, m - 1, d, h, min).getTime();
   const now = at(2026, 11, 18, 18, 0);
-  assert.equal(whenLabel(at(2026, 11, 18, 16, 31), now), "Hoy · 16:31");
-  assert.equal(whenLabel(at(2026, 11, 17, 9, 5), now), "Ayer · 09:05");
-  assert.equal(whenLabel(at(2026, 11, 17, 23, 59), at(2026, 11, 18, 0, 5)), "Ayer · 23:59", "cruza la medianoche");
+  assert.equal(whenLabel(at(2026, 11, 18, 16, 31), now), "18/11/2026 · 16:31");
+  assert.equal(whenLabel(at(2026, 11, 17, 9, 5), now), "17/11/2026 · 09:05");
   assert.equal(whenLabel(at(2026, 11, 1, 8, 0), now), "01/11/2026 · 08:00");
   assert.equal(whenLabel(at(2025, 12, 31, 23, 0), now), "31/12/2025 · 23:00");
 });

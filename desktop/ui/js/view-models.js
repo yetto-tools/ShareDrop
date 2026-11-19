@@ -257,10 +257,6 @@ const pad = (n) => String(n).padStart(2, "0");
 export function whenLabel(at, now) {
   const d = new Date(at);
   const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  const dayStart = (ms) => new Date(new Date(ms).getFullYear(), new Date(ms).getMonth(), new Date(ms).getDate()).getTime();
-  const days = Math.round((dayStart(now) - dayStart(at)) / 86_400_000);
-  if (days === 0) return `Hoy · ${time}`;
-  if (days === 1) return `Ayer · ${time}`;
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} · ${time}`;
 }
 

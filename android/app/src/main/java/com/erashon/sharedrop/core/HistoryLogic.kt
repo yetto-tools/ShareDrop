@@ -2,7 +2,6 @@ package com.erashon.sharedrop.core
 
 import java.util.Calendar
 import java.util.TimeZone
-import kotlin.math.roundToInt
 
 /** Transferencia terminada, guardada en el historial. */
 data class HistoryEntry(
@@ -53,21 +52,11 @@ object HistoryLogic {
             }
             .take(limit)
 
-    /** Cuándo terminó: "Hoy · 16:31", "Ayer · 09:05" o "18/11/2026 · 16:31". */
+    /** Cuándo terminó: siempre fecha y hora: "18/11/2026 · 16:31". */
     fun whenLabel(at: Long, now: Long, zone: TimeZone = TimeZone.getDefault()): String {
         fun cal(ms: Long) = Calendar.getInstance(zone).apply { timeInMillis = ms }
-        fun dayStart(ms: Long) = cal(ms).apply {
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-
         val c = cal(at)
         val time = "%02d:%02d".format(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE))
-        // Se redondea para no depender del cambio de hora (un día puede durar 23 o 25 horas).
-        val days = ((dayStart(now) - dayStart(at)) / 86_400_000.0).roundToInt()
-        return when (days) {
-            0 -> "Hoy · $time"
-            1 -> "Ayer · $time"
-            else -> "%02d/%02d/%d · %s".format(c.get(Calendar.DAY_OF_MONTH), c.get(Calendar.MONTH) + 1, c.get(Calendar.YEAR), time)
-        }
+        return "%02d/%02d/%d · %s".format(c.get(Calendar.DAY_OF_MONTH), c.get(Calendar.MONTH) + 1, c.get(Calendar.YEAR), time)
     }
 }

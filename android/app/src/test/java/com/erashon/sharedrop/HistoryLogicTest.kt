@@ -55,11 +55,10 @@ class HistoryLogicTest {
     }
 
     @Test
-    fun `whenLabel distingue hoy ayer y fechas anteriores`() {
+    fun `whenLabel muestra siempre fecha y hora`() {
         val now = ms(2026, 11, 18, 18, 0)
-        assertEquals("Hoy · 16:31", HistoryLogic.whenLabel(ms(2026, 11, 18, 16, 31), now, utc))
-        assertEquals("Ayer · 09:05", HistoryLogic.whenLabel(ms(2026, 11, 17, 9, 5), now, utc))
-        assertEquals("cruza la medianoche", "Ayer · 23:59", HistoryLogic.whenLabel(ms(2026, 11, 17, 23, 59), ms(2026, 11, 18, 0, 5), utc))
+        assertEquals("18/11/2026 · 16:31", HistoryLogic.whenLabel(ms(2026, 11, 18, 16, 31), now, utc))
+        assertEquals("17/11/2026 · 09:05", HistoryLogic.whenLabel(ms(2026, 11, 17, 9, 5), now, utc))
         assertEquals("01/11/2026 · 08:00", HistoryLogic.whenLabel(ms(2026, 11, 1, 8, 0), now, utc))
         assertEquals("31/12/2025 · 23:00", HistoryLogic.whenLabel(ms(2025, 12, 31, 23, 0), now, utc))
     }

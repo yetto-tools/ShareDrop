@@ -31,3 +31,7 @@ desktop/app/gen/
 Thumbs.db
 .DS_Store
 .env
+
+# Resultados de pruebas .NET
+TestResults/
+*.dmp

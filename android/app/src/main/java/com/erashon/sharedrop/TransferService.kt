@@ -26,6 +26,7 @@ class TransferService : Service() {
     private var wake: PowerManager.WakeLock? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var watching = false
+    private var watchingIncoming = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -49,7 +50,47 @@ class TransferService : Service() {
         val engine = (application as ShareDropApp).engine
         engine.start()
         watchForUsbHint(engine, nm)
+        watchIncoming(engine, nm)
         return START_STICKY
+    }
+
+    /** Avisa con una notificación cuando llega un archivo (recibiendo, recibido o fallido), con la app en segundo plano. */
+    private fun watchIncoming(engine: Engine, nm: NotificationManager) {
+        if (watchingIncoming) return
+        watchingIncoming = true
+        nm.createNotificationChannel(NotificationChannel(INCOMING_CHANNEL, "Archivos recibidos", NotificationManager.IMPORTANCE_DEFAULT))
+        val open = PendingIntent.getActivity(
+            this, 2, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_IMMUTABLE,
+        )
+        scope.launch {
+            val last = HashMap<Long, Pair<Transfer.State, Int>>()
+            engine.transfers.collect { list ->
+                for (t in list.filter { it.incoming }) {
+                    val pct = if (t.total > 0) (t.done * 100 / t.total).toInt() else -1
+                    val key = t.state to pct
+                    if (last[t.id] == key) continue
+                    last[t.id] = key
+                    val b = Notification.Builder(this@TransferService, INCOMING_CHANNEL)
+                        .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                        .setContentIntent(open)
+                        .setOnlyAlertOnce(true)
+                    when (t.state) {
+                        Transfer.State.Active -> b.setContentTitle("Recibiendo de ${t.peer}")
+                            .setContentText(t.file)
+                            .setOngoing(true)
+                            .setProgress(100, pct.coerceAtLeast(0), pct < 0)
+                        Transfer.State.Finished -> b.setContentTitle("Archivo recibido")
+                            .setContentText("${t.file} · de ${t.peer}")
+                            .setAutoCancel(true)
+                        Transfer.State.Failed -> b.setContentTitle("Falló la recepción")
+                            .setContentText(t.error ?: t.file)
+                            .setAutoCancel(true)
+                    }
+                    nm.notify(INCOMING_ID_BASE + (t.id % 100_000).toInt(), b.build())
+                }
+            }
+        }
     }
 
     /**
@@ -97,5 +138,7 @@ class TransferService : Service() {
         private const val CHANNEL = "sharedrop"
         private const val HINT_CHANNEL = "hints"
         private const val HINT_ID = 2
+        private const val INCOMING_CHANNEL = "incoming"
+        private const val INCOMING_ID_BASE = 100
     }
 }
