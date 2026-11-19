@@ -3,6 +3,8 @@ package com.erashon.sharedrop.core
 import android.content.Context
 import android.os.Build
 import android.provider.Settings
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONObject
 import java.util.UUID
 
@@ -27,6 +29,14 @@ class Store(private val ctx: Context) {
     var receiveTree: String?
         get() = prefs.getString("receiveTree", null)
         set(v) = prefs.edit().apply { if (v == null) remove("receiveTree") else putString("receiveTree", v) }.apply()
+
+    /** Apariencia elegida: "system" (la del teléfono), "light" u "dark". */
+    private val _theme = MutableStateFlow(prefs.getString("theme", "system") ?: "system")
+    val theme: StateFlow<String> = _theme
+    fun setTheme(v: String) {
+        prefs.edit().putString("theme", v).apply()
+        _theme.value = v
+    }
 
     private fun peers(): JSONObject = JSONObject(prefs.getString("peers", "{}")!!)
 

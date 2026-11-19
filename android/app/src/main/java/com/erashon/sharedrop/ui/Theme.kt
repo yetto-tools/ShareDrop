@@ -23,9 +23,14 @@ object Ios {
     val RedDark = Color(0xFFFF453A)
 }
 
+/** [mode]: "system" sigue al teléfono; "light" y "dark" lo fuerzan. */
 @Composable
-fun ShareDropTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
+fun ShareDropTheme(mode: String = "system", content: @Composable () -> Unit) {
+    val dark = when (mode) {
+        "dark" -> true
+        "light" -> false
+        else -> isSystemInDarkTheme()
+    }
     val scheme = if (dark) {
         darkColorScheme(
             primary = Ios.BlueDark,

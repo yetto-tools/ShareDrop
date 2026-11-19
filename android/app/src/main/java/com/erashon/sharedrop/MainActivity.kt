@@ -24,6 +24,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -50,6 +51,7 @@ import com.erashon.sharedrop.ui.HomeScreen
 import com.erashon.sharedrop.ui.PairingDialogs
 import com.erashon.sharedrop.ui.PermissionsPage
 import com.erashon.sharedrop.ui.Screen
+import com.erashon.sharedrop.ui.AppearancePage
 import com.erashon.sharedrop.ui.ShareDropTheme
 
 class MainActivity : ComponentActivity() {
@@ -90,7 +92,8 @@ class MainActivity : ComponentActivity() {
         startForegroundService(Intent(this, TransferService::class.java))
 
         setContent {
-            ShareDropTheme {
+            val themeMode by engine.store.theme.collectAsStateWithLifecycle()
+            ShareDropTheme(themeMode) {
                 val notif = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
                 LaunchedEffect(Unit) {
                     if (Build.VERSION.SDK_INT >= 33) notif.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -171,7 +174,10 @@ class MainActivity : ComponentActivity() {
                                 .togetherWith(slideOutHorizontally(spec) { -d * it / 3 } + fadeOut(tween(250)))
                         },
                         label = "pantalla",
+                        modifier = Modifier.fillMaxWidth(),
                     ) { shown ->
+                    // Cada pantalla emite varios elementos pensados para una Column: sin ella se apilarían.
+                    Column(Modifier.fillMaxWidth()) {
                     when (shown) {
                         Screen.Home -> HomeScreen(
                             engine = engine, devices = devices, link = link,
@@ -190,6 +196,8 @@ class MainActivity : ComponentActivity() {
                         )
                         Screen.Folder -> FolderPage(engine, onBack = goBack) { folderPicker.launch(null) }
                         Screen.Permissions -> PermissionsPage(allFiles, onBack = goBack) { requestAllFiles() }
+                        Screen.Appearance -> AppearancePage(themeMode, onBack = goBack) { engine.store.setTheme(it) }
+                    }
                     }
                     }
                 }

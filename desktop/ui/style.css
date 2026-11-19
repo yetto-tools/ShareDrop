@@ -20,7 +20,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #000000;
     --card: #1c1c1e;
     --text: #ffffff;
@@ -37,6 +37,26 @@
     --glass: rgba(44, 44, 46, .82);
   }
 }
+
+/* Apariencia elegida en General: pisa al sistema. */
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --card: #1c1c1e;
+  --text: #ffffff;
+  --muted: #98989f;
+  --sep: #38383a;
+  --fill: rgba(120, 120, 128, .32);
+  --blue: #0a84ff;
+  --blue-tint: rgba(10, 132, 255, .2);
+  --green: #30d158;
+  --recv: #ffd60a;
+  --recv-text: #ffd60a;
+  --orange: #ff9f0a;
+  --red: #ff453a;
+  --glass: rgba(44, 44, 46, .82);
+  color-scheme: dark;
+}
+:root[data-theme="light"] { color-scheme: light; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }

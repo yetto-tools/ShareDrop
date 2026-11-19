@@ -9,6 +9,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.erashon.sharedrop.storage.Storage
 import com.erashon.sharedrop.ui.ShareDropTheme
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.erashon.sharedrop.ui.ShareSheet
 
 /**
@@ -31,7 +33,8 @@ class ShareActivity : ComponentActivity() {
         val summary = if (uris.size == 1) first else "$first y ${uris.size - 1} más"
 
         setContent {
-            ShareDropTheme {
+            val themeMode by engine.store.theme.collectAsStateWithLifecycle()
+            ShareDropTheme(themeMode) {
                 ShareSheet(engine, summary, onSend = { device -> engine.send(device, uris) }, onClose = { finish() })
             }
         }

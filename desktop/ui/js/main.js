@@ -17,6 +17,7 @@ import { createRouter } from "./components/router.js";
 import { createStatusBar } from "./components/status-bar.js";
 import { createSwipe } from "./components/swipe.js";
 import { createToast } from "./components/toast.js";
+import { applyTheme, loadTheme, normalizeTheme as loadThemeValue, saveTheme } from "./theme.js";
 import { createTransferList } from "./components/transfer-list.js";
 import { activityOf, statusLine } from "./view-models.js";
 
@@ -216,6 +217,22 @@ async function main() {
   folder.render(info);
   showDevices(info.devices);
   monitor.start();
+  // Apariencia: Sistema, Claro u Oscuro (se recuerda en este equipo).
+  const themeFilter = byId("theme-filter");
+  const paintTheme = (/** @type {string} */ t) => {
+    for (const b of themeFilter.querySelectorAll("button")) b.setAttribute("aria-checked", String(b.getAttribute("data-theme") === t));
+  };
+  const savedTheme = loadTheme();
+  applyTheme(savedTheme);
+  paintTheme(savedTheme);
+  themeFilter.addEventListener("click", (e) => {
+    const b = /** @type {Element} */ (e.target).closest("button[data-theme]");
+    if (!b) return;
+    const t = loadThemeValue(b.getAttribute("data-theme"));
+    applyTheme(t);
+    saveTheme(t);
+    paintTheme(t);
+  });
   await initAutostartSwitch({ button: byId("autostart"), row: byId("autostart").closest(".row"), autostart: api.autostart });
 }
 

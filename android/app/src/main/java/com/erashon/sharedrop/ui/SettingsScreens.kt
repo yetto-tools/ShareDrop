@@ -55,7 +55,8 @@ enum class Screen(val title: String) {
     History("Historial"),
     Connection("Conexión"),
     Folder("Archivos recibidos"),
-    Permissions("Permisos");
+    Permissions("Permisos"),
+    Appearance("Apariencia");
 
     /** Pantalla a la que lleva "‹". Inicio no tiene. */
     val parent: Screen? get() = if (this == Home) null else Home
@@ -120,11 +121,12 @@ fun MoreMenu(onNavigate: (Screen) -> Unit) {
             MenuRow("Conexión", MenuIcon.Wifi) { open = false; onNavigate(Screen.Connection) }
             MenuRow("Archivos recibidos", MenuIcon.Folder) { open = false; onNavigate(Screen.Folder) }
             MenuRow("Permisos", MenuIcon.Check) { open = false; onNavigate(Screen.Permissions) }
+            MenuRow("Apariencia", MenuIcon.Theme) { open = false; onNavigate(Screen.Appearance) }
         }
     }
 }
 
-private enum class MenuIcon { Clock, Wifi, Folder, Check }
+private enum class MenuIcon { Clock, Wifi, Folder, Check, Theme }
 
 @Composable
 private fun MenuRow(label: String, icon: MenuIcon, onClick: () -> Unit) {
@@ -198,6 +200,11 @@ private fun Symbol(icon: MenuIcon) {
                 }
                 drawPath(body, tint, style = s)
             }
+            MenuIcon.Theme -> {
+                // Círculo con la mitad rellena: claro/oscuro.
+                drawCircle(tint, w * 0.42f, Offset(w / 2, h / 2), style = s)
+                drawArc(tint, 90f, 180f, true, Offset(w * 0.08f, h * 0.08f), Size(w * 0.84f, h * 0.84f))
+            }
             MenuIcon.Check -> {
                 drawCircle(tint, w * 0.42f, Offset(w / 2, h / 2), style = s)
                 val tick = Path().apply {
@@ -270,6 +277,18 @@ fun ConnectionPage(
 fun FolderPage(engine: Engine, onBack: () -> Unit, onChoose: () -> Unit) {
     PageHeader(Screen.Folder, onBack = onBack)
     FolderSection(engine, onChoose, header = false)
+}
+
+@Composable
+fun AppearancePage(current: String, onBack: () -> Unit, onSelect: (String) -> Unit) {
+    PageHeader(Screen.Appearance, onBack = onBack)
+    val modes = listOf("system" to "Sistema", "light" to "Claro", "dark" to "Oscuro")
+    SegmentedControl(modes.map { it.second }, modes.indexOfFirst { it.first == current }.coerceAtLeast(0)) { onSelect(modes[it].first) }
+    Spacer(Modifier.height(10.dp))
+    Text(
+        "Sistema sigue el modo claro u oscuro del teléfono.",
+        fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp),
+    )
 }
 
 @Composable
