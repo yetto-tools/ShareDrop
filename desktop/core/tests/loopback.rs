@@ -237,3 +237,22 @@ fn malformed_pair_code_fails_without_pairing() {
     a.engine.stop();
     b.engine.stop();
 }
+
+#[test]
+fn a_failed_send_can_be_retried_once_and_the_retry_runs_again() {
+    let a = node("retry");
+    let file = tmp("retry-file").join("dato.txt");
+    std::fs::write(&file, b"hola").unwrap();
+
+    // Nadie escucha en ese puerto: el envío falla al conectar.
+    a.engine.send_to_addr("nadie", "127.0.0.1:1", vec![Outgoing::from_path(&file).unwrap()]);
+    let failed = outgoing_done(&a.events);
+    assert_eq!(failed.state, TransferState::Failed);
+
+    a.engine.retry(failed.id).expect("el envío fallido se puede reintentar");
+    let again = outgoing_done(&a.events);
+    assert_eq!(again.state, TransferState::Failed, "sigue sin haber nadie");
+    assert_ne!(again.id, failed.id, "el reintento es una transferencia nueva");
+
+    assert!(a.engine.retry(failed.id).is_err(), "el mismo envío no se reintenta dos veces");
+}

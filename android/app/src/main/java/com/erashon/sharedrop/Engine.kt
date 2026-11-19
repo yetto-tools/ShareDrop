@@ -97,6 +97,9 @@ class Engine(private val ctx: Context) {
     private val session = System.currentTimeMillis()
 
     private val ids = AtomicLong()
+
+    /** Envíos fallidos que se pueden repetir: id → (equipo, archivos que faltaron). */
+    private val retries = java.util.concurrent.ConcurrentHashMap<Long, Pair<Device, List<Uri>>>()
     private val pool = Executors.newCachedThreadPool()
     @Volatile private var server: ServerSocket? = null
 
@@ -168,8 +171,19 @@ class Engine(private val ctx: Context) {
         if (t.state != Transfer.State.Active) history.record(t, session)
     }
 
+    /** ¿Se puede repetir este envío fallido? Solo mientras la app siga abierta. */
+    fun canRetry(t: Transfer) = t.state == Transfer.State.Failed && !t.incoming && retries.containsKey(t.id)
+
+    /** Repite un envío fallido desde el archivo que se cortó; la fila fallida se reemplaza por la nueva. */
+    fun retry(t: Transfer) {
+        val (device, uris) = retries.remove(t.id) ?: return
+        _transfers.update { list -> list.filterNot { it.id == t.id } }
+        send(device, uris)
+    }
+
     private fun runSend(tid: Long, device: Device, uris: List<Uri>) {
         val files = uris.map { Storage.describe(ctx, it) }
+        var sentCount = 0
         var current = Transfer(tid, device.name, files.firstOrNull()?.name ?: "", 0, 0, false, Transfer.State.Active)
         track(current)
         try {
@@ -188,7 +202,8 @@ class Engine(private val ctx: Context) {
                 if (reply.type != T.ACCEPT) throw IOException(errorMessage(reply.payload) ?: "Rechazado")
 
                 val buf = ByteArray(CHUNK)
-                for (f in files) {
+                for ((i, f) in files.withIndex()) {
+                    sentCount = i
                     current = current.copy(file = f.name, done = 0, total = f.size)
                     track(current)
                     ch.send(T.FILE_START, JSONObject().put("name", f.name).put("size", f.size).toString().toByteArray())
@@ -217,6 +232,8 @@ class Engine(private val ctx: Context) {
             }
             track(current.copy(state = Transfer.State.Finished))
         } catch (e: Exception) {
+            // Se anota qué faltó (desde el archivo que se cortó) para poder reintentar.
+            retries[tid] = device to uris.drop(sentCount)
             track(current.copy(state = Transfer.State.Failed, error = e.message ?: e.javaClass.simpleName))
         }
     }

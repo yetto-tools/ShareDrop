@@ -428,7 +428,7 @@ fun TransferSection(engine: Engine) {
         Grouped {
             shown.forEachIndexed { i, t ->
                 if (i > 0) RowDivider()
-                TransferRow(t, onOpen = { selected = it })
+                TransferRow(t, onOpen = { selected = it }, onRetry = if (engine.canRetry(t)) ({ engine.retry(t) }) else null)
             }
         }
     }
@@ -436,7 +436,7 @@ fun TransferSection(engine: Engine) {
 }
 
 @Composable
-fun TransferRow(t: Transfer, onOpen: ((Transfer) -> Unit)? = null, whenText: String? = null) {
+fun TransferRow(t: Transfer, onOpen: ((Transfer) -> Unit)? = null, whenText: String? = null, onRetry: (() -> Unit)? = null) {
     // Un color por dirección: lo recibido (descarga) es turquesa y lo enviado (subida) es azul.
     val dirColor = if (t.incoming) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
     val failed = t.state == Transfer.State.Failed
@@ -494,6 +494,13 @@ fun TransferRow(t: Transfer, onOpen: ((Transfer) -> Unit)? = null, whenText: Str
             }
         }
         if (openable) Text("›", fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (failed && onRetry != null) {
+            Text(
+                "Reintentar", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clip(CircleShape).clickable(onClick = onRetry)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)).padding(horizontal = 12.dp, vertical = 6.dp),
+            )
+        }
     }
 }
 

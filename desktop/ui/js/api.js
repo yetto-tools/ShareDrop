@@ -27,6 +27,7 @@ export function createApi(tauri) {
     info: () => invoke("info"),
     /** @param {string} deviceId @param {string[]} paths */
     sendFiles: (deviceId, paths) => invoke("send_files", { deviceId, paths }),
+    retryTransfer: (id) => invoke("retry_transfer", { id }),
     /** @param {string|null} code */
     answerCode: (code) => invoke("answer_code", { code }),
     /** @param {string|null} path @returns {Promise<AppInfo>} */

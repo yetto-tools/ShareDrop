@@ -118,6 +118,15 @@ async function main() {
     list: byId("transfers"),
     filter: byId("transfer-filter"),
     onOpen: fileActions.show,
+    // Reintentar repite el envío desde el archivo que falló; la fila fallida se reemplaza por la nueva.
+    onRetry: async (t) => {
+      try {
+        await api.retryTransfer(Number(t.id));
+        transfers.remove(t.id);
+      } catch (e) {
+        toast.show(String(e));
+      }
+    },
   });
 
   // --- Dispositivos y envío ---

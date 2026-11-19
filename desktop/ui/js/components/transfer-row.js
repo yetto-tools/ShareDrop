@@ -23,7 +23,9 @@ export function createTransferRow(id) {
   const ring = el("div", { cls: "ring" }, ringSvg(), svg(ICONS.down, { cls: "dir" }));
   const sub = el("div", { cls: "sub" }, el("span", { cls: "chip" }), el("span", { cls: "text" }));
   const body = el("div", { cls: "body" }, el("div", { cls: "title" }), sub);
-  return el("li", { cls: "row", attrs: { "data-id": id } }, ring, body);
+  const retry = el("button", { cls: "retry", attrs: { type: "button" } }, "Reintentar");
+  retry.hidden = true;
+  return el("li", { cls: "row", attrs: { "data-id": id } }, ring, body, retry);
 }
 
 /**
@@ -31,8 +33,9 @@ export function createTransferRow(id) {
  * @param {HTMLElement} li
  * @param {Transfer} t
  * @param {string} [suffix]  Texto que se añade al final de la línea de estado (p. ej. la fecha).
+ * @param {boolean} [canRetry]  Muestra «Reintentar» en los envíos fallidos (solo en la lista en vivo).
  */
-export function paintTransferRow(li, t, suffix = "") {
+export function paintTransferRow(li, t, suffix = "", canRetry = false) {
   const ring = /** @type {HTMLElement} */ (li.querySelector(".ring"));
   const title = /** @type {HTMLElement} */ (li.querySelector(".title"));
   const sub = /** @type {HTMLElement} */ (li.querySelector(".sub"));
@@ -51,6 +54,10 @@ export function paintTransferRow(li, t, suffix = "") {
   const status = transferStatus(t);
   text.textContent = status.text + suffix;
   sub.className = `sub${status.tone === "error" ? " err" : ""}`;
+
+  // Un envío fallido que sí llegó a arrancar (id numérico del motor) se puede repetir.
+  const retry = /** @type {HTMLButtonElement | null} */ (li.querySelector(".retry"));
+  if (retry) retry.hidden = !(canRetry && t.state === "failed" && !t.incoming && typeof t.id === "number");
 
   // Un archivo recibido y ya guardado se puede abrir.
   if (isOpenable(t) && !li.classList.contains("openable")) {

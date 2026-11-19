@@ -133,14 +133,17 @@ pub struct Outgoing {
     pub name: String,
     pub size: u64,
     pub open: Box<dyn FnOnce() -> io::Result<Box<dyn Read + Send>> + Send>,
+    /// Ruta del archivo, si viene del disco: permite reintentar un envío fallido.
+    pub path: Option<PathBuf>,
 }
 
 impl Outgoing {
     pub fn from_path(p: &Path) -> io::Result<Self> {
         let size = std::fs::metadata(p)?.len();
         let name = p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "archivo".into());
+        let path = Some(p.to_path_buf());
         let p = p.to_path_buf();
-        Ok(Outgoing { name, size, open: Box::new(move || Ok(Box::new(std::fs::File::open(p)?) as Box<dyn Read + Send>)) })
+        Ok(Outgoing { name, size, open: Box::new(move || Ok(Box::new(std::fs::File::open(p)?) as Box<dyn Read + Send>)), path })
     }
 }
 
@@ -159,8 +162,16 @@ pub struct Engine {
     local_port: Mutex<u16>,
     usb: Mutex<crate::adb::UsbStatus>,
     history: crate::history::History,
+    /// Envíos fallidos que se pueden repetir: id → (equipo, dirección, archivos que faltaron).
+    retries: Mutex<std::collections::HashMap<u64, Retry>>,
     /// Identifica este arranque: los ids de transferencia se reinician en cada uno.
     session: u64,
+}
+
+struct Retry {
+    peer: String,
+    addr: String,
+    paths: Vec<PathBuf>,
 }
 
 struct Ui {
@@ -213,6 +224,7 @@ impl Engine {
             answer: Mutex::new(None),
             local_port: Mutex::new(TCP_PORT),
             usb: Mutex::new(Default::default()),
+            retries: Mutex::new(Default::default()),
         })
     }
 
@@ -357,14 +369,35 @@ impl Engine {
             path: None,
         };
         self.emit_transfer(&cur);
+        // Antes de enviar se anotan las rutas: si falla, se reintenta desde el archivo que se cortó.
+        let names: Vec<String> = files.iter().map(|f| f.name.clone()).collect();
+        let paths: Vec<Option<PathBuf>> = files.iter().map(|f| f.path.clone()).collect();
         match self.do_send(&mut cur, addr, files) {
             Ok(()) => cur.state = TransferState::Finished,
             Err(e) => {
                 cur.state = TransferState::Failed;
                 cur.error = Some(e.to_string());
+                let from = names.iter().position(|n| *n == cur.file).unwrap_or(0);
+                if let Some(rest) = paths[from..].iter().cloned().collect::<Option<Vec<_>>>() {
+                    self.retries.lock().unwrap().insert(cur.id, Retry { peer: peer.into(), addr: addr.into(), paths: rest });
+                }
             }
         }
         self.emit_transfer(&cur);
+    }
+
+    /// Repite un envío fallido (desde el archivo que se cortó). Falla si ya no hay datos para repetirlo
+    /// o si algún archivo dejó de existir.
+    pub fn retry(self: &Arc<Self>, id: u64) -> std::result::Result<(), String> {
+        let Retry { peer, addr, paths } =
+            self.retries.lock().unwrap().remove(&id).ok_or("Este envío ya no se puede reintentar")?;
+        let files = paths
+            .iter()
+            .map(|p| Outgoing::from_path(p).map_err(|e| format!("{}: {e}", p.display())))
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        let me = self.clone();
+        thread::spawn(move || me.run_send(&peer, &addr, files));
+        Ok(())
     }
 
     fn do_send(self: &Arc<Self>, cur: &mut TransferInfo, addr: &str, files: Vec<Outgoing>) -> Result<()> {

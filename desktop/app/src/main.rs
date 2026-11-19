@@ -154,6 +154,11 @@ fn send_files(state: State<AppState>, device_id: String, paths: Vec<String>) -> 
     Ok(())
 }
 
+#[tauri::command]
+fn retry_transfer(state: State<AppState>, id: u64) -> Result<(), String> {
+    state.engine.retry(id)
+}
+
 /// Tipos de archivo que ejecutan código: nunca se abren desde ShareDrop, solo se muestran en su carpeta.
 fn is_risky(path: &Path) -> bool {
     const RISKY: &[&str] = &[
@@ -360,7 +365,7 @@ fn main() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![info, send_files, answer_code, set_receive_dir, open_received, network_status, usb_status, history, open_settings])
+        .invoke_handler(tauri::generate_handler![info, send_files, retry_transfer, answer_code, set_receive_dir, open_received, network_status, usb_status, history, open_settings])
         .run(tauri::generate_context!())
         .expect("error al iniciar ShareDrop");
 }

@@ -11,8 +11,9 @@ import { createTransferRow, paintTransferRow } from "./transfer-row.js";
  * @param {HTMLElement} deps.list     <ul> de filas.
  * @param {HTMLElement} deps.filter   Control segmentado "Todo / Recibidos / Enviados".
  * @param {(t: Transfer) => void} deps.onOpen  Se tocó un archivo recibido.
+ * @param {(t: Transfer) => void} [deps.onRetry]  Se pulsó «Reintentar» en un envío fallido.
  */
-export function createTransferList({ section, list, filter, onOpen }) {
+export function createTransferList({ section, list, filter, onOpen, onRetry = () => {} }) {
   /** Indexadas por id en texto: así coinciden con `data-id` del DOM. @type {Map<string, { li: HTMLElement, transfer: Transfer }>} */
   const rows = new Map();
 
@@ -27,7 +28,14 @@ export function createTransferList({ section, list, filter, onOpen }) {
       section.hidden = false;
     }
     entry.transfer = t;
-    paintTransferRow(entry.li, t);
+    paintTransferRow(entry.li, t, "", true);
+  }
+
+  /** Quita la fila de una transferencia (p. ej. el envío fallido que se acaba de reintentar). @param {string | number} id */
+  function remove(id) {
+    const key = String(id);
+    rows.get(key)?.li.remove();
+    rows.delete(key);
   }
 
   /** @param {Event} e */
@@ -37,6 +45,12 @@ export function createTransferList({ section, list, filter, onOpen }) {
   }
 
   list.addEventListener("click", (e) => {
+    const retry = /** @type {Element} */ (e.target).closest("button.retry");
+    if (retry) {
+      const entry = rows.get(retry.closest("li")?.getAttribute("data-id") ?? "");
+      if (entry) onRetry(entry.transfer);
+      return;
+    }
     const entry = rowOf(e);
     if (entry) onOpen(entry.transfer);
   });
@@ -57,5 +71,5 @@ export function createTransferList({ section, list, filter, onOpen }) {
     list.dataset.filter = button.getAttribute("data-filter") ?? "all";
   });
 
-  return { upsert };
+  return { upsert, remove };
 }
