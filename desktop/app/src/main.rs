@@ -307,6 +307,10 @@ fn main() {
             }
         })
         .setup(|app| {
+            // Sin la barra de menú que Tauri pone por defecto (Archivo, Editar, Ver…): esto es una app, no un navegador.
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.remove_menu();
+            }
             let handle = app.handle().clone();
             let store = Arc::new(Store::open(Store::default_dir())?);
             let receive_dir = store.receive_dir().unwrap_or_else(Store::default_receive_dir);

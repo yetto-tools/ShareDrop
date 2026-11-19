@@ -19,6 +19,7 @@ import { createSwipe } from "./components/swipe.js";
 import { createToast } from "./components/toast.js";
 import { applyTheme, loadTheme, normalizeTheme as loadThemeValue, saveTheme } from "./theme.js";
 import { createTransferList } from "./components/transfer-list.js";
+import { lockBrowserUi } from "./native-feel.js";
 import { activityOf, statusLine } from "./view-models.js";
 
 /** Obtiene un elemento por id o falla con un mensaje claro (mejor que un error críptico más adelante). */
@@ -29,6 +30,7 @@ function byId(id) {
 }
 
 async function main() {
+  lockBrowserUi();
   const api = createApi(window.__TAURI__);
   const toast = createToast(byId("toast"));
 
