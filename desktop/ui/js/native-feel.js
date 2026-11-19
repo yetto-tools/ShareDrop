@@ -18,10 +18,19 @@ export function isBrowserShortcut(e) {
 
 /** @param {Document} [doc] */
 export function lockBrowserUi(doc = document) {
-  doc.addEventListener("contextmenu", (e) => {
-    if (!isEditable(e.target)) e.preventDefault();
-  });
-  doc.addEventListener("keydown", (e) => {
-    if (isBrowserShortcut(e)) e.preventDefault();
-  });
+  // En la fase de captura: se decide antes que cualquier otro elemento de la página.
+  doc.addEventListener(
+    "contextmenu",
+    (e) => {
+      if (!isEditable(e.target)) e.preventDefault();
+    },
+    true,
+  );
+  doc.addEventListener(
+    "keydown",
+    (e) => {
+      if (isBrowserShortcut(e)) e.preventDefault();
+    },
+    true,
+  );
 }
