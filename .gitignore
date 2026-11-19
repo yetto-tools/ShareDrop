@@ -11,12 +11,6 @@ local.properties
 *.apk
 *.aab
 
-# .NET
-bin/
-obj/
-.vs/
-*.user
-
 # Node
 node_modules/
 
@@ -31,7 +25,3 @@ desktop/app/gen/
 Thumbs.db
 .DS_Store
 .env
-
-# Resultados de pruebas .NET
-TestResults/
-*.dmp

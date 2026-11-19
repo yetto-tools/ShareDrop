@@ -9,7 +9,6 @@ Compartir archivos en ambos sentidos entre un celular Android y una laptop (Wind
 | `desktop/app` + `desktop/ui` | App de escritorio con **Tauri 2** (Windows, Ubuntu/Debian, Fedora, Rocky 10) |
 | `desktop/cli` | Versión en terminal para **Rocky 9** y servidores (no necesita WebKitGTK 4.1) |
 | `android` | App Android en Kotlin (referencia actual; se migrará al núcleo en Rust) |
-| `windows` | Cliente WPF en C#, solo como referencia del protocolo |
 
 ## Estado: Fase 1 (núcleo por TCP)
 Funciona por cualquier medio con conectividad IP: misma Wi-Fi, hotspot del celular, USB tethering o Bluetooth tethering. La laptop no cambia de red.
@@ -25,7 +24,6 @@ cargo tauri build                     # instaladores (desde desktop/app): .deb, 
 cargo build -p sharedrop-cli          # versión terminal
 ```
 Android: `cd android && gradlew.bat assembleDebug` y `adb install -r app\build\outputs\apk\debug\app-debug.apk`.
-Pruebas de C# (incluyen vectores cruzados con Rust): `cd windows\ShareDrop.Tests && dotnet test`.
 
 ## Conectar por cable USB
 Hay dos formas, y la app muestra cuál se usa con una etiqueta bajo "Emparejado · dirección":
@@ -78,4 +76,4 @@ Firewall: abrir TCP 47800 y UDP 47801 (`ufw allow 47800/tcp && ufw allow 47801/u
 - El QR usa un secreto de 128 bits y no se puede adivinar offline. El código de 6 dígitos que usan los equipos sin QR (hoy, el APK actual) sí es vulnerable a fuerza bruta offline si alguien captura el handshake: empareja en una red de confianza.
 - El escritorio no tiene escáner: si el escritorio inicia la conexión, hay que pegar el código largo que muestra el teléfono.
 - El cifrado es AES-256-GCM por trama con clave derivada del secreto emparejado (no TLS).
-- Probado: Rust↔Rust por loopback y vectores idénticos Rust↔C#. **No probado aún con un celular real**, ni el APK contra el núcleo en Rust.
+- Probado: Rust↔Rust por loopback y vectores de protocolo fijos. **No probado aún con un celular real**, ni el APK contra el núcleo en Rust.
