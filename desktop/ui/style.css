@@ -1,0 +1,386 @@
+/* Estilo inspirado en iOS: listas agrupadas, título grande, tintes del sistema. */
+:root {
+  --bg: #f2f2f7;
+  --card: #ffffff;
+  --text: #000000;
+  --muted: #8a8a8e;
+  --sep: #c6c6c8;
+  --fill: rgba(120, 120, 128, .16);
+  --blue: #007aff;
+  --blue-tint: rgba(0, 122, 255, .12);
+  --green: #34c759;
+  /* Un color por dirección: lo recibido (descarga) es amarillo; lo enviado (subida) es azul. */
+  --recv: #ffcc00;       /* amarillo del sistema de iOS: lo recibido (descarga) */
+  --recv-text: #946f00;  /* texto sobre fondo claro: el amarillo puro no contrasta */
+  --orange: #ff9500;
+  --red: #ff3b30;
+  --radius: 12px;
+  --glass: rgba(249, 249, 249, .82);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --card: #1c1c1e;
+    --text: #ffffff;
+    --muted: #98989f;
+    --sep: #38383a;
+    --fill: rgba(120, 120, 128, .32);
+    --blue: #0a84ff;
+    --blue-tint: rgba(10, 132, 255, .2);
+    --green: #30d158;
+    --recv: #ffd60a;
+    --recv-text: #ffd60a;
+    --orange: #ff9f0a;
+    --red: #ff453a;
+    --glass: rgba(44, 44, 46, .82);
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, "Noto Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+main { max-width: 600px; margin: 0 auto; padding: 14px 20px 64px; }
+
+header { padding: 0 4px 8px; }
+h1 { margin: 0; font-size: 34px; line-height: 1.1; font-weight: 700; letter-spacing: -.02em; }
+#me { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+section { margin-top: 26px; }
+h2 {
+  margin: 0 0 7px 16px;
+  font-size: 13px; font-weight: 400; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .02em;
+}
+
+/* ---------- Lista agrupada ---------- */
+.group { list-style: none; margin: 0; padding: 0; background: var(--card); border-radius: var(--radius); overflow: hidden; }
+.group:empty { display: none; }
+
+.row {
+  position: relative;
+  display: flex; align-items: center; gap: 12px;
+  min-height: 56px; padding: 10px 16px;
+}
+.row + .row::before {
+  content: ""; position: absolute; top: 0; right: 0; left: 64px; height: 1px; background: var(--sep); opacity: .6;
+}
+#folder-row + .row::before, #folder-row::before { left: 16px; }
+.row .body { flex: 1; min-width: 0; }
+.row .title { font-size: 16px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .sub { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .sub.ok { color: var(--green); }
+.row .sub.err { color: var(--red); white-space: normal; }
+.link { color: var(--blue); font-weight: 400 !important; }
+
+/* Indicador de batería */
+.battery { display: inline-flex; align-items: center; gap: 5px; }
+.batt {
+  position: relative; display: inline-block; width: 22px; height: 11px; border: 1.3px solid var(--muted); border-radius: 3.5px; padding: 1px;
+}
+.batt::after { content: ""; position: absolute; right: -3.5px; top: 2.5px; width: 2px; height: 4px; background: var(--muted); border-radius: 0 1px 1px 0; }
+.batt i { display: block; height: 100%; border-radius: 1.5px; background: var(--text); transform-origin: left; }
+.batt.charging i { background: var(--green); }
+.batt.low i { background: var(--red); }
+
+.tappable { cursor: pointer; transition: background-color .12s; }
+.tappable:active { background: var(--fill); }
+.row:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; border-radius: 8px; }
+.chevron { width: 8px; height: 14px; flex: none; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: .7; }
+
+/* Soltar archivos sobre un dispositivo */
+.device { transition: background-color .15s; }
+.device.over { background: var(--blue-tint); }
+.device.over .title { color: var(--blue); }
+
+/* ---------- Avatar de dispositivo ---------- */
+.avatar {
+  flex: none; width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--blue-tint); color: var(--blue);
+}
+.avatar svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Botón tintado ---------- */
+button {
+  font: inherit; font-weight: 600; font-size: 14px;
+  border: 0; border-radius: 999px; padding: 6px 16px;
+  background: var(--blue-tint); color: var(--blue); cursor: pointer;
+  transition: transform .1s, opacity .1s;
+}
+button:active { transform: scale(.96); opacity: .8; }
+button:disabled { opacity: .35; cursor: default; transform: none; }
+
+/* ---------- Interruptor estilo iOS ---------- */
+button.switch {
+  position: relative; flex: none; width: 51px; height: 31px; padding: 0; border-radius: 999px;
+  background: var(--fill); transition: background-color .2s;
+}
+button.switch i {
+  position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, .25); transition: transform .2s cubic-bezier(.3, .9, .3, 1);
+}
+button.switch[aria-checked="true"] { background: var(--green); }
+button.switch[aria-checked="true"] i { transform: translateX(20px); }
+button.switch:active { transform: none; opacity: 1; }
+button.switch:active i { transform: translateX(0) scaleX(1.15); }
+button.switch[aria-checked="true"]:active i { transform: translateX(16px) scaleX(1.15); }
+
+/* ---------- Estado vacío (radar) ---------- */
+.empty { display: grid; justify-items: center; padding: 30px 24px 26px; text-align: center; background: var(--card); border-radius: var(--radius); }
+.empty[hidden] { display: none !important; }
+.radar { position: relative; width: 84px; height: 84px; display: grid; place-items: center; margin-bottom: 14px; }
+.radar b { width: 14px; height: 14px; border-radius: 50%; background: var(--blue); }
+.radar i {
+  position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--blue); opacity: 0;
+  animation: ping 2.6s cubic-bezier(.2, .6, .3, 1) infinite;
+}
+.radar i:nth-child(2) { animation-delay: .85s; }
+.radar i:nth-child(3) { animation-delay: 1.7s; }
+@keyframes ping { 0% { transform: scale(.2); opacity: .7; } 100% { transform: scale(1); opacity: 0; } }
+.empty-title { margin: 0; font-size: 17px; font-weight: 600; }
+.empty-sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; max-width: 320px; }
+
+/* ---------- Transferencias ---------- */
+.ring { flex: none; width: 40px; height: 40px; position: relative; display: grid; place-items: center; }
+.ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 3; }
+.ring .track { stroke: var(--fill); }
+.ring { --dir: var(--blue); }
+.ring.in { --dir: var(--recv); }
+/* El anillo y el icono llevan el color de la dirección; solo un fallo lo cambia a rojo. */
+.ring::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: color-mix(in srgb, var(--dir) 15%, transparent); }
+.ring .prog { stroke: var(--dir); stroke-linecap: round; stroke-dasharray: 94.25; stroke-dashoffset: 94.25; transition: stroke-dashoffset .2s linear; }
+.ring.done .prog { stroke-dashoffset: 0; }
+.ring.fail { --dir: var(--red); }
+.ring.fail .prog { stroke-dashoffset: 0; }
+.ring .dir { width: 18px; height: 18px; fill: none; stroke: var(--dir); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; position: static; transform: none; }
+
+/* Etiqueta de dirección: "↓ Recibido" / "↑ Enviado" */
+.chip {
+  display: inline-block; margin-right: 6px; padding: 0 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; line-height: 18px; letter-spacing: .01em;
+  color: var(--blue); background: var(--blue-tint);
+}
+.chip.in { color: var(--recv-text); background: color-mix(in srgb, var(--recv) 18%, transparent); }
+.chip.fail { color: var(--red); background: color-mix(in srgb, var(--red) 14%, transparent); }
+
+/* ---------- Control segmentado (filtro de transferencias) ---------- */
+.segmented { display: flex; gap: 2px; padding: 2px; margin: 0 0 10px; border-radius: 9px; background: var(--fill); }
+.segmented button {
+  flex: 1; padding: 5px 8px; border-radius: 7px; background: none; color: var(--text);
+  font-size: 13px; font-weight: 500;
+}
+.segmented button[aria-checked="true"] { background: var(--card); font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, .18); }
+.segmented button:active { transform: none; opacity: 1; }
+#transfers[data-filter="in"] > li[data-dir="out"],
+#transfers[data-filter="out"] > li[data-dir="in"] { display: none; }
+
+/* ---------- Cartel al arrastrar ---------- */
+#drop-hint {
+  position: fixed; inset: 0; display: grid; place-items: end center; padding-bottom: 32px; pointer-events: none;
+  background: linear-gradient(to top, var(--glass), transparent 55%);
+}
+#drop-hint span {
+  background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  padding: 12px 20px; border-radius: 999px; font-weight: 600; box-shadow: 0 2px 20px rgba(0, 0, 0, .15);
+}
+
+/* ---------- Alertas estilo iOS ---------- */
+dialog.alert {
+  border: 0; padding: 0; width: min(290px, 88vw); border-radius: 14px; overflow: hidden;
+  background: var(--glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); color: var(--text);
+  box-shadow: 0 10px 50px rgba(0, 0, 0, .3);
+}
+dialog.alert[open] { animation: pop .22s cubic-bezier(.25, 1, .5, 1); }
+dialog.alert::backdrop { background: rgba(0, 0, 0, .35); }
+@keyframes pop { from { transform: scale(1.12); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.alert-body { padding: 20px 16px 18px; text-align: center; }
+.alert h3 { margin: 0 0 4px; font-size: 17px; font-weight: 600; }
+.alert p { margin: 0; font-size: 13px; color: var(--muted); }
+.digits { margin-top: 14px; font-size: 38px; font-weight: 600; letter-spacing: .14em; font-variant-numeric: tabular-nums; text-indent: .14em; }
+.digits.token { font-size: 15px; letter-spacing: .06em; text-indent: 0; font-family: ui-monospace, Consolas, monospace; word-spacing: .3em; user-select: text; }
+.qr { display: block; width: 200px; height: 200px; margin: 14px auto 0; border-radius: 8px; image-rendering: pixelated; }
+#code-input.token { font-size: 14px; letter-spacing: .02em; font-family: ui-monospace, Consolas, monospace; }
+#code-input {
+  width: 100%; margin-top: 14px; padding: 9px; font: inherit; font-size: 26px; font-weight: 600; letter-spacing: .25em; text-align: center;
+  border: 0; border-radius: 10px; background: var(--fill); color: var(--text); user-select: text;
+}
+.alert-actions { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid var(--sep); }
+.alert-actions button {
+  border-radius: 0; background: none; padding: 13px; font-size: 17px; font-weight: 400; color: var(--blue);
+}
+.alert-actions button + button { border-left: 1px solid var(--sep); }
+.alert-actions button.strong { font-weight: 600; }
+.alert-actions button:active { background: var(--fill); transform: none; }
+
+/* ---------- Hoja de acciones estilo iOS ---------- */
+dialog.sheet {
+  border: 0; padding: 0; background: transparent; color: var(--text);
+  width: min(380px, calc(100vw - 16px)); margin: auto auto 10px; display: none;
+}
+dialog.sheet[open] { display: grid; gap: 8px; animation: rise .26s cubic-bezier(.25, 1, .5, 1); }
+dialog.sheet::backdrop { background: rgba(0, 0, 0, .35); }
+@keyframes rise { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.sheet-group {
+  border-radius: 14px; overflow: hidden;
+  background: var(--glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+}
+.sheet-title { margin: 0; padding: 13px 16px; text-align: center; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.sheet-group button {
+  display: block; width: 100%; border-radius: 0; background: none; color: var(--blue);
+  padding: 16px; font-size: 19px; font-weight: 400; border-top: 1px solid var(--sep);
+}
+.sheet-group button.strong { font-weight: 600; border-top: 0; }
+.sheet-group button:active { background: var(--fill); transform: none; opacity: 1; }
+
+/* ---------- Aviso breve ---------- */
+#toast {
+  position: fixed; left: 50%; bottom: 44px; max-width: min(420px, 90vw);
+  padding: 10px 18px; border-radius: 999px; font-size: 13px; text-align: center;
+  background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, .2);
+  opacity: 0; transform: translate(-50%, 12px); pointer-events: none;
+  transition: opacity .2s, transform .2s cubic-bezier(.25, 1, .5, 1);
+}
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* Fila de archivo recibido que se puede abrir */
+.row.openable .chevron { margin-left: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* =====================================================================
+   Pantallas, barra superior y controles de cristal (igual que en el teléfono)
+   Regla de Apple: el cristal solo va en los controles flotantes (botones y menú), nunca en las
+   tarjetas ni en las filas de las listas.
+   ===================================================================== */
+.screen[hidden] { display: none; }
+
+.navbar { display: flex; align-items: center; justify-content: space-between; height: 44px; }
+
+.glass {
+  display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 50%;
+  color: var(--text); font-weight: 400;
+  background: color-mix(in srgb, var(--card) 72%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .22);
+}
+.glass svg { width: 22px; height: 22px; fill: currentColor; stroke: none; }
+.glass.back svg { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.glass:active { transform: scale(.94); opacity: 1; }
+
+/* Si el usuario pide menos transparencia o más contraste, el cristal pasa a ser opaco. */
+@media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
+  .glass, .menu { background: var(--card); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+.more { position: relative; }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; min-width: 250px; padding: 6px; border-radius: 22px;
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  -webkit-backdrop-filter: blur(30px) saturate(1.4); backdrop-filter: blur(30px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, .38);
+  animation: rise .22s cubic-bezier(.25, 1, .5, 1);
+}
+.menu[hidden] { display: none; }
+.menu button[role="menuitem"] {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; height: 48px;
+  padding: 0 14px; border-radius: 16px; background: none; color: var(--text); font-size: 17px; font-weight: 400; text-align: left;
+}
+.menu button[role="menuitem"] svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.menu button[role="menuitem"]:hover, .menu button[role="menuitem"]:focus-visible { background: var(--fill); outline: none; }
+.menu button[role="menuitem"]:active { transform: none; opacity: 1; background: var(--fill); }
+
+/* Tarjeta de estado de Conexión y textos largos */
+.row.stack { min-height: 0; padding-top: 14px; padding-bottom: 14px; }
+.row .sub.wrap { white-space: normal; }
+.row .title.ok { color: var(--green); }
+.row .title.err { color: var(--red); }
+.group.spaced { margin-top: 14px; }
+.hint-group { margin-top: 10px; }
+.hint-group:has(> li[hidden]) { display: none; }
+
+/* Nota al pie bajo una lista (como en los Ajustes de iOS) y fichas de icono por tipo de conexión */
+.footnote { margin: 8px 16px 0; font-size: 13px; color: var(--muted); }
+.row .tile { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; }
+.row .tile svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.row.media + .row.media::before { left: 58px; }
+
+/* Icono del sistema operativo en el avatar, etiquetas de medio / Pre-alpha y botón de información */
+.avatar svg.os { fill: currentColor; stroke: none; fill-rule: evenodd; }
+.chip.usb { color: var(--orange); background: color-mix(in srgb, var(--orange) 16%, transparent); }
+.chip.pre { color: var(--orange); background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 55%, transparent); }
+.chip.wifi, .chip.net { color: var(--blue); background: var(--blue-tint); }
+button.info {
+  flex: none; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; margin-right: 2px;
+  background: none; color: var(--blue); border-radius: 50%;
+}
+button.info svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+button.info:hover { background: var(--blue-tint); }
+
+/* Ficha de información */
+.strong-title { color: var(--text); font-size: 17px; font-weight: 600; }
+.kvlist { list-style: none; margin: 0; padding: 0 16px 8px; display: grid; }
+.kv { display: flex; justify-content: space-between; gap: 16px; padding: 9px 0; border-top: 1px solid var(--sep); font-size: 14px; }
+.kv .k { color: var(--muted); }
+.kv .v { text-align: right; overflow-wrap: anywhere; }
+.sheet-note { margin: 0; padding: 10px 16px 14px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--sep); }
+.sheet-note b { color: var(--orange); }
+.active-badge { flex: none; font-size: 13px; font-weight: 600; color: var(--green); }
+.active-badge[hidden] { display: none; }
+.sub.tags { margin-top: 3px; }
+.sub.tags .chip { margin-right: 6px; }
+
+/* Cada sistema con su color de marca: Android siempre verde. */
+.avatar.android { color: #3ddc84; background: color-mix(in srgb, #3ddc84 18%, transparent); }
+.avatar.windows { color: #0a84ff; background: color-mix(in srgb, #0a84ff 18%, transparent); }
+.avatar.linux   { color: #f5c518; background: color-mix(in srgb, #f5c518 18%, transparent); }
+
+/* =====================================================================
+   Barra de estado (parte inferior, en todas las pantallas)
+   Solo repite información que ya está en otra parte de la ventana.
+   ===================================================================== */
+.statusbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: 30px;
+  display: flex; align-items: center; gap: 16px; padding: 0 14px;
+  font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  border-top: 1px solid var(--sep);
+}
+.sb-item { display: inline-flex; align-items: center; gap: 6px; }
+.sb-grow { flex: 1; justify-content: center; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.dot.ok { background: var(--green); }
+.dot.warn { background: var(--orange); }
+.dot.error { background: var(--red); }
+/* Hilo de progreso total pegado al borde superior de la barra */
+.sb-progress { position: absolute; left: 0; right: 0; top: -1px; height: 2px; pointer-events: none; }
+.sb-progress i { display: block; height: 100%; background: var(--blue); transform: scaleX(0); transform-origin: left; transition: transform .2s linear; }
+@media (max-width: 520px) { #sb-devices, #sb-version { display: none; } }
+
+/* Inicio: el botón "•••" va en la misma fila que el título (la ventana ya tiene su propia barra de título,
+   una segunda barra casi vacía solo desperdicia espacio). */
+#screen-home { position: relative; }
+#screen-home .navbar { position: absolute; top: 0; right: 0; z-index: 5; }
+#screen-home header { padding-right: 56px; min-height: 44px; }
+
+/* Historial */
+header .subtle { margin: 4px 0 14px; font-size: 13px; color: var(--muted); }
+#history-list[hidden] { display: none; }
+/* Los arrastres horizontales llegan como eventos de puntero (sin esto el sistema los cancela). */
+body { touch-action: pan-y; }

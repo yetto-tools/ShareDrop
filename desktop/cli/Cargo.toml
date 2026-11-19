@@ -1,0 +1,9 @@
+[package]
+name = "sharedrop-cli"
+version = "0.1.0"
+edition = "2021"
+description = "ShareDrop sin interfaz gráfica: para servidores y distribuciones sin WebKitGTK 4.1 (p. ej. Rocky Linux 9)"
+
+[dependencies]
+dirs = "5"
+sharedrop-core = { path = "../core" }

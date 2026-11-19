@@ -1,0 +1,33 @@
+# Rust
+target/
+
+# Android / Gradle
+.gradle/
+.kotlin/
+build/
+local.properties
+*.jks
+*.keystore
+*.apk
+*.aab
+
+# .NET
+bin/
+obj/
+.vs/
+*.user
+
+# Node
+node_modules/
+
+# Tauri generado
+desktop/app/gen/
+
+# Herramientas / IDE / SO
+.impeccable/
+.idea/
+.vscode/
+.claude/
+Thumbs.db
+.DS_Store
+.env

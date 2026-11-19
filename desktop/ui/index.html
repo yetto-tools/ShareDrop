@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ShareDrop</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <!-- ===== Inicio: solo lo de uso diario ===== -->
+    <section id="screen-home" class="screen" aria-label="Inicio">
+      <nav class="navbar">
+        <span></span>
+        <div class="more">
+          <button type="button" id="more-button" class="glass" aria-label="Más opciones" aria-haspopup="menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.9" /><circle cx="12" cy="12" r="1.9" /><circle cx="18.5" cy="12" r="1.9" /></svg>
+          </button>
+          <div id="more-menu" class="menu" role="menu" aria-label="Más opciones" hidden>
+            <button type="button" role="menuitem" data-go="history">
+              <span>Historial</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.2 2" /></svg>
+            </button>
+            <button type="button" role="menuitem" data-go="connection">
+              <span>Conexión</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9a13 13 0 0 1 18 0" /><path d="M6 12.5a8.5 8.5 0 0 1 12 0" /><path d="M9 16a4 4 0 0 1 6 0" /><circle cx="12" cy="19" r="1" /></svg>
+            </button>
+            <button type="button" role="menuitem" data-go="folder">
+              <span>Archivos recibidos</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5h6l2 2.5h10v9H3z" /></svg>
+            </button>
+            <button type="button" role="menuitem" data-go="general">
+              <span>General</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8 12.5l3 3 5-6" /></svg>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <header>
+        <h1>ShareDrop</h1>
+        <p id="me"></p>
+      </header>
+
+      <section aria-labelledby="h-devices">
+        <h2 id="h-devices">Dispositivos cercanos</h2>
+        <div id="empty" class="empty">
+          <div class="radar" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+          <p class="empty-title">Buscando dispositivos…</p>
+          <p class="empty-sub">Abre ShareDrop en el otro equipo. Deben estar en la misma red o conectados por USB.</p>
+        </div>
+        <ul id="devices" class="group" role="list"></ul>
+
+        <!-- Aviso que lleva a la pantalla Conexión (igual que en el teléfono) -->
+        <ul class="group hint-group" role="list">
+          <li id="connection-hint" class="row tappable" tabindex="0" role="button" hidden>
+            <div class="body">
+              <div id="connection-hint-title" class="title">No veo otros equipos</div>
+              <div class="sub link">Toca para ver cómo conectarte</div>
+            </div>
+            <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>
+          </li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="h-transfers" id="transfers-section" hidden>
+        <h2 id="h-transfers">Transferencias</h2>
+        <div class="segmented" id="transfer-filter" role="radiogroup" aria-label="Filtrar transferencias">
+          <button type="button" role="radio" aria-checked="true" data-filter="all">Todo</button>
+          <button type="button" role="radio" aria-checked="false" data-filter="in">↓ Recibidos</button>
+          <button type="button" role="radio" aria-checked="false" data-filter="out">↑ Enviados</button>
+        </div>
+        <ul id="transfers" class="group" role="list"></ul>
+      </section>
+    </section>
+
+    <!-- ===== Historial: se abre deslizando de izquierda a derecha ===== -->
+    <section id="screen-history" class="screen" aria-label="Historial" hidden>
+      <nav class="navbar">
+        <button type="button" class="glass back" data-back aria-label="Atrás"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4.5 7.5 12 15 19.5" /></svg></button>
+        <span></span>
+      </nav>
+      <header>
+        <h1>Historial</h1>
+        <p class="subtle">Las últimas 20 de cada tipo</p>
+      </header>
+      <div class="segmented" id="history-filter" role="radiogroup" aria-label="Filtrar historial">
+        <button type="button" role="radio" aria-checked="true" data-filter="all">Todo</button>
+        <button type="button" role="radio" aria-checked="false" data-filter="in">↓ Recibidos</button>
+        <button type="button" role="radio" aria-checked="false" data-filter="out">↑ Enviados</button>
+      </div>
+      <ul id="history-list" class="group" role="list"></ul>
+      <p id="history-empty" class="footnote" hidden></p>
+    </section>
+
+    <!-- ===== Conexión ===== -->
+    <section id="screen-connection" class="screen" aria-label="Conexión" hidden>
+      <nav class="navbar">
+        <button type="button" class="glass back" data-back aria-label="Atrás"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4.5 7.5 12 15 19.5" /></svg></button>
+        <span></span>
+      </nav>
+      <header><h1>Conexión</h1></header>
+      <ul id="connection-status" class="group" role="list"></ul>
+      <ul id="connection-actions" class="group spaced" role="list"></ul>
+      <p class="footnote">Los dos equipos deben estar conectados a la misma red (el mismo router), o unidos por cable USB o por la red del teléfono.</p>
+    </section>
+
+    <!-- ===== Archivos recibidos ===== -->
+    <section id="screen-folder" class="screen" aria-label="Archivos recibidos" hidden>
+      <nav class="navbar">
+        <button type="button" class="glass back" data-back aria-label="Atrás"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4.5 7.5 12 15 19.5" /></svg></button>
+        <span></span>
+      </nav>
+      <header><h1>Archivos recibidos</h1></header>
+      <ul class="group" role="list">
+        <li class="row tappable" id="folder-row" tabindex="0" role="button" aria-label="Cambiar carpeta de destino">
+          <div class="body">
+            <div class="title">Guardar en</div>
+            <div class="sub" id="folder-path"></div>
+          </div>
+          <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>
+        </li>
+        <li class="row tappable" id="folder-reset" tabindex="0" role="button" hidden>
+          <div class="body"><div class="title link">Restablecer carpeta predeterminada</div></div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ===== General ===== -->
+    <section id="screen-general" class="screen" aria-label="General" hidden>
+      <nav class="navbar">
+        <button type="button" class="glass back" data-back aria-label="Atrás"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4.5 7.5 12 15 19.5" /></svg></button>
+        <span></span>
+      </nav>
+      <header><h1>General</h1></header>
+      <ul class="group" role="list">
+        <li class="row">
+          <div class="body">
+            <div class="title">Iniciar con el sistema</div>
+            <div class="sub">Queda en la bandeja para recibir archivos</div>
+          </div>
+          <button id="autostart" class="switch" role="switch" aria-checked="false" aria-label="Iniciar con el sistema"><i></i></button>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer id="statusbar" class="statusbar">
+    <span class="sb-progress" aria-hidden="true"><i></i></span>
+    <span id="sb-link" class="sb-item"><i id="sb-dot" class="dot" aria-hidden="true"></i><span id="sb-link-text">Buscando…</span></span>
+    <span id="sb-devices" class="sb-item"></span>
+    <span id="sb-transfers" class="sb-item sb-grow"></span>
+    <span id="sb-version" class="sb-item"></span>
+  </footer>
+
+  <div id="drop-hint" hidden><span>Suelta los archivos sobre un dispositivo</span></div>
+
+  <dialog id="actions" class="sheet" aria-labelledby="actions-title">
+    <div class="sheet-group">
+      <p id="actions-title" class="sheet-title"></p>
+      <button type="button" id="act-open">Abrir archivo</button>
+      <button type="button" id="act-reveal">Mostrar en carpeta</button>
+    </div>
+    <div class="sheet-group">
+      <button type="button" id="act-cancel" class="strong">Cancelar</button>
+    </div>
+  </dialog>
+
+  <dialog id="device-info" class="sheet" aria-labelledby="device-info-title">
+    <div class="sheet-group">
+      <p id="device-info-title" class="sheet-title strong-title"></p>
+      <ul id="device-info-list" class="kvlist" role="list"></ul>
+      <p id="device-info-note" class="sheet-note" hidden>
+        <b>Pre-alpha:</b> entre dos teléfonos o entre dos PC la conexión funciona, pero aún está en pruebas.
+      </p>
+    </div>
+    <div class="sheet-group">
+      <button type="button" id="device-info-close" class="strong">Cerrar</button>
+    </div>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="show-code" class="alert">
+    <div class="alert-body">
+      <h3 id="show-code-title"></h3>
+      <p id="show-code-hint">Escribe este código en el otro equipo</p>
+      <img id="code-qr" class="qr" alt="Código QR de emparejamiento" hidden />
+      <div class="digits" id="code" aria-live="polite"></div>
+    </div>
+  </dialog>
+
+  <dialog id="ask-code" class="alert">
+    <form method="dialog" id="ask-form">
+      <div class="alert-body">
+        <h3 id="ask-title"></h3>
+        <p id="ask-hint"></p>
+        <input id="code-input" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      </div>
+      <div class="alert-actions">
+        <button type="button" id="ask-cancel">Cancelar</button>
+        <button type="submit" id="ask-ok" class="strong" disabled>Aceptar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

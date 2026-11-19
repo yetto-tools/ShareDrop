@@ -1,0 +1,9 @@
+{
+  "name": "sharedrop-desktop-ui",
+  "private": true,
+  "type": "module",
+  "description": "Solo para las pruebas de la interfaz; la app no usa npm (la interfaz son módulos ES sin bundler).",
+  "scripts": {
+    "test": "node --test \"ui-tests/*.test.js\""
+  }
+}
