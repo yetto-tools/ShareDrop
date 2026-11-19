@@ -1,6 +1,13 @@
 package com.erashon.sharedrop
 
 import android.Manifest
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -153,7 +160,19 @@ class MainActivity : ComponentActivity() {
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 16.dp),
                 ) {
-                    when (screen) {
+                    AnimatedContent(
+                        targetState = screen,
+                        transitionSpec = {
+                            // El historial entra por la izquierda (como el gesto); las demás páginas, por la derecha.
+                            val forward = targetState != Screen.Home
+                            val d = (if ((if (forward) targetState else initialState) == Screen.History) -1 else 1) * (if (forward) 1 else -1)
+                            val spec = tween<androidx.compose.ui.unit.IntOffset>(250)
+                            (slideInHorizontally(spec) { d * it / 3 } + fadeIn(tween(250)))
+                                .togetherWith(slideOutHorizontally(spec) { -d * it / 3 } + fadeOut(tween(250)))
+                        },
+                        label = "pantalla",
+                    ) { shown ->
+                    when (shown) {
                         Screen.Home -> HomeScreen(
                             engine = engine, devices = devices, link = link,
                             onPick = { d ->
@@ -171,6 +190,7 @@ class MainActivity : ComponentActivity() {
                         )
                         Screen.Folder -> FolderPage(engine, onBack = goBack) { folderPicker.launch(null) }
                         Screen.Permissions -> PermissionsPage(allFiles, onBack = goBack) { requestAllFiles() }
+                    }
                     }
                 }
                 PairingDialogs(engine)
